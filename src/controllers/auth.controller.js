@@ -2,15 +2,30 @@ const user = require("../models/user.model")
 const bcrypt = require("bcrypt")
 const APIError = require("../utils/errors")
 const Response = require("../utils/respose")
+const { createToken } = require("../middlewares/auth")
 
+// ! login fonksiyonu
 const login = async (req, res) => {
-    console.log(req.body)
+    const { email, password } = req.body // email=req.body.email
 
-    return res.json(req.body)
+    const userData = await user.findOne({ email })
+
+    if (!userData) {
+        throw new APIError("Email veya şifre yanlış", 401)
+    }
+    // ! şifre çözümleme
+    const comparePassword = await bcrypt.compare(password, userData.password)
+
+    if (!comparePassword) {
+        throw new APIError("Email veya şifre yanlış", 401)
+    }
+
+    createToken(userData, res)
 }
 
+// ! register fonksiyonu
 const register = async (req, res) => {
-    const { email } = req.body //req.body.email
+    const { email } = req.body //email = req.body.email
 
     const userCheck = await user.findOne({ email })
 

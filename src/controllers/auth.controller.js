@@ -1,6 +1,7 @@
 const user = require("../models/user.model")
 const bcrypt = require("bcrypt")
 const APIError = require("../utils/errors")
+const Response = require("../utils/respose")
 
 const login = async (req, res) => {
     console.log(req.body)
@@ -14,29 +15,22 @@ const register = async (req, res) => {
     const userCheck = await user.findOne({ email })
 
     if (userCheck) {
-        throw new APIError("Girmiş Olduğunuz Email Kullanımda !",401)
+        throw new APIError("Girmiş Olduğunuz Email Kullanımda !", 401)
     }
 
-    req.body.password = await bcrypt.hash(req.body.password,10)
+    req.body.password = await bcrypt.hash(req.body.password, 10)
 
-    try {
-        const userData = new user(req.body)
+    const userData = new user(req.body)
 
-        await userData.save()
-        .then((response)=>{
-            return res.status(201).json({
-                success:true,
-                data:response,
-                message:"Kayıt Başarıyla Eklendi"
-            })
+    await userData.save()
+        .then((data) => {
+            return new Response(data, "Kayıt Başarıyla Eklendi").created(res)
         })
-        .catch((err)=>{
-            console.log(err)
+        .catch((err) => {
+            throw new APIError(`Kullanıcı Kayıt Edilemedi ${err}`, 400)
         })
 
-    } catch (error) {
-        console.log(error)
-    }
+
 }
 
 module.exports = {

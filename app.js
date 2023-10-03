@@ -8,13 +8,7 @@ const router = require("./src/routers")
 const errorHandlerMiddleware = require("./src/middlewares/errorHandler")
 const cors = require("cors")
 const corsOptions = require("./src/helpers/corsOptions")
-
-app.get("/", (req, res) => {
-    res.json({
-        message: "hoşgeldiniz"
-    })
-})
-
+const mongoSanitize = require("express-mongo-sanitize")
 
 // ! Middleware
 app.use(express.json())
@@ -23,7 +17,12 @@ app.use(express.urlencoded({ limit: "50mb", extended: true, parameterLimit: 5000
 
 app.use(cors(corsOptions))
 
+app.use(mongoSanitize({
+    replaceWith:"_",
+}))
+
 app.use("/api", router)
+
 // ! Hata yakalama
 app.use(errorHandlerMiddleware)
 

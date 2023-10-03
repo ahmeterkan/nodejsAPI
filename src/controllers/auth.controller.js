@@ -1,8 +1,8 @@
 const user = require("../models/user.model")
 const bcrypt = require("bcrypt")
 const APIError = require("../utils/errors")
-const Response = require("../utils/respose")
-const { createToken } = require("../middlewares/auth")
+const Response = require("../utils/response")
+const { createToken, tokenCkeck } = require("../middlewares/auth")
 
 // ! login fonksiyonu
 const login = async (req, res) => {
@@ -21,6 +21,8 @@ const login = async (req, res) => {
     }
 
     createToken(userData, res)
+
+    next()
 }
 
 // ! register fonksiyonu
@@ -48,7 +50,12 @@ const register = async (req, res) => {
 
 }
 
+const me = async (req, res) => {
+    return new Response(req.user).success(res)
+}
+
 module.exports = {
     login,
-    register
+    register,
+    me
 }

@@ -2,11 +2,10 @@ const user = require("../models/user.model")
 const bcrypt = require("bcrypt")
 const APIError = require("../utils/errors")
 const Response = require("../utils/response")
-const { createToken, tokenCkeck } = require("../middlewares/auth")
+const { createToken, tokenCkeck, createTemporaryToken, decodedTemporaryToken } = require("../middlewares/auth")
 const crypto = require("crypto")
 const sendEmail = require("../utils/sendMail")
 const moment = require("moment/moment")
-const { log } = require("console")
 
 // ! login fonksiyonu
 const login = async (req, res) => {
@@ -87,9 +86,48 @@ const forgetPassword = async (req, res) => {
     return new Response(true, "Lütfen mail kutunuzu kontrol ediniz").success(res)
 }
 
+const resetCodeCheck = async (req, res) => {
+    const { email, code } = req.body
+
+    const userInfo = await user.findOne({ email }).select("_id name lastname email reset")
+    if (!userInfo) throw new APIError("Geçersiz kod", 401)
+    const dbTime = moment(userInfo.reset.time)
+    const nowTime = moment(new Date())
+
+    const timeDiff = dbTime.diff(nowTime, "m")
+
+    if (timeDiff <= 0 || userInfo.reset.code !== code) {
+        throw new APIError("Geçersiz Kod", 401)
+    }
+    const temporaryToken = await createTemporaryToken(userInfo._id, userInfo.email)
+
+    return new Response({ temporaryToken }, "Şifre sıfırlama yapabilirsiniz").success(res)
+}
+
+const resetPassword = async (req, res) => {
+    const { password, temporaryToken } = req.body
+
+    const decodedToken = await decodedTemporaryToken(temporaryToken)
+
+    const hashPassword = await bcrypt.hash(password, 10)
+    await user.findByIdAndUpdate(
+        { _id: decodedToken._id },
+        {
+            reset: {
+                code: null,
+                time: null
+            },
+            password: hashPassword
+        }
+    )
+
+    return new Response(decodedToken, "Şifre sıfırlama başarılı").success(res)
+}
 module.exports = {
     login,
     register,
     me,
-    forgetPassword
+    forgetPassword,
+    resetCodeCheck,
+    resetPassword
 }

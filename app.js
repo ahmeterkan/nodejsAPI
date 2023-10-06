@@ -13,6 +13,8 @@ const path = require("path")
 const apiLimiter = require("./src/middlewares/rateLimit")
 const moment = require("moment-timezone")
 moment.tz.setDefault("Euroğe/Istanbul")
+const swaggerDocs = require("./src/utils/swagger")
+
 
 // ! Middleware
 app.use(express.json())
@@ -32,9 +34,16 @@ app.use(mongoSanitize({
 
 app.use("/api", router)
 
+app.get("/", (req, res) => {
+    res.json({
+        message: "Hoş Geldiniz"
+    })
+})
+
 // ! Hata yakalama
 app.use(errorHandlerMiddleware)
 
 app.listen(port, () => {
     console.log(`server ${port} portundan çalışıyor`)
+    swaggerDocs(app, port)
 })

@@ -23,7 +23,7 @@ const createToken = async (user, res) => {
 
 // ! token kontrol etme
 
-const tokenCkeck = async (req, res, next) => {
+const tokenCheck = async (req, res, next) => {
     const headerToken = req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
 
     if (!headerToken) {
@@ -70,7 +70,7 @@ const decodedTemporaryToken = async (temproraryToken) => {
 
 module.exports = {
     createToken,
-    tokenCkeck,
+    tokenCheck,
     createTemporaryToken,
     decodedTemporaryToken
 }
